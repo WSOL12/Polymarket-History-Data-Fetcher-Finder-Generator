@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment (local config, never commit)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+
+# Generated output (default from BTC_UPDOWN_OUTPUT)
+btc-updown.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
