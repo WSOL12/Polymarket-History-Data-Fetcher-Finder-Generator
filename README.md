@@ -1,6 +1,6 @@
 # poly-copy
 
-Fetch resolved Polymarket Bitcoin Up/Down outcomes for **5m**, **15m**, and **1h** markets.
+**Polymarket history data finder, checker & generator** — fetch resolved Polymarket Bitcoin Up/Down outcomes for **5m**, **15m**, and **1h** markets. Search, find, and generate historical prediction market data from Polymarket.
 
 ## What it returns
 
@@ -71,3 +71,7 @@ When `BTC_UPDOWN_OUTPUT` is set, the file contains:
 
 - `src/scripts/btc-updown-history.ts` — main script
 - `.env.example` — environment template (copy to `.env`)
+
+---
+
+**Keywords:** polymarket, polymarket history, polymarket data finder, polymarket checker, polymarket search, polymarket tool, polymarket history generator, prediction market, BTC up down, polymarket API, Gamma API
