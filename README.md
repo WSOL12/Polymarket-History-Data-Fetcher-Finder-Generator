@@ -26,14 +26,16 @@ Edit `.env` with your preferences. See `.env.example` for all options.
 | `BTC_UPDOWN_TIMEFRAMES` | Comma-separated: `5m`, `15m`, `1h` | all |
 | `BTC_UPDOWN_OUTPUT` | JSON file path to save results. Omit to skip. | — |
 | `BTC_UPDOWN_VERBOSE` | `true` to include title column in output | false |
+| `BTC_UPDOWN_STREAK_MIN` | Streaks: only show runs >= N (see `npm run streaks`) | show all |
 
 Example `.env`:
 
 ```env
-BTC_UPDOWN_DAYS_BACK=14
-BTC_UPDOWN_TIMEFRAMES=5m,15m,1h
+BTC_UPDOWN_DAYS_BACK=2
+BTC_UPDOWN_TIMEFRAMES=5m
 BTC_UPDOWN_OUTPUT=btc-updown.json
 BTC_UPDOWN_VERBOSE=false
+BTC_UPDOWN_STREAK_MIN=6
 ```
 
 ## Run
@@ -43,6 +45,16 @@ npm run btc-updown
 ```
 
 Or `npm run start` / `npm run dev` (same script).
+
+### Streaks (consecutive Yes/No runs)
+
+```bash
+npm run streaks
+```
+
+Shows consecutive runs like `3: Yes`, `2: No`, `12: Yes`. Requires `btc-updown.json` (run `npm run btc-updown` first).
+
+Set `BTC_UPDOWN_STREAK_MIN=6` in `.env` to only show runs of 6+.
 
 ## JSON output format
 
@@ -54,22 +66,18 @@ When `BTC_UPDOWN_OUTPUT` is set, the file contains:
   "timeframes": ["5m"],
   "daysBack": 1,
   "total": 287,
+  "yesCount": 145,
+  "noCount": 142,
   "results": [
-    {
-      "timeframe": "5m",
-      "slug": "btc-updown-5m-1774260000",
-      "title": "Bitcoin Up or Down - March 23, 6:00AM-6:05AM ET",
-      "endDate": "2026-03-23T10:05:00Z",
-      "result": "Yes",
-      "closedTime": "2026-03-23 10:05:25+00"
-    }
+    { "timeframe": "5m", "result": "Yes" }
   ]
 }
 ```
 
 ## Project structure
 
-- `src/scripts/btc-updown-history.ts` — main script
+- `src/scripts/btc-updown-history.ts` — fetch history
+- `src/scripts/btc-updown-streaks.ts` — consecutive Yes/No streaks
 - `.env.example` — environment template (copy to `.env`)
 
 ---

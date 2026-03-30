@@ -318,12 +318,16 @@ async function main() {
   }
 
   if (outputPath) {
+    const yesCount = results.filter((r) => r.result === 'Yes').length;
+    const noCount = results.filter((r) => r.result === 'No').length;
     const json = {
       fetchedAt: new Date().toISOString(),
       timeframes,
       daysBack: daysBack ?? null,
       total: results.length,
-      results,
+      yesCount,
+      noCount,
+      results: results.map((r) => ({ timeframe: r.timeframe, result: r.result })),
     };
     writeFileSync(outputPath, JSON.stringify(json, null, 2), 'utf-8');
     console.log(`Saved ${results.length} results to ${outputPath}`);
