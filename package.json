@@ -8,9 +8,7 @@
     "build": "tsc",
     "start": "tsx src/scripts/btc-updown-history.ts",
     "dev": "tsx src/scripts/btc-updown-history.ts",
-    "btc-updown": "tsx src/scripts/btc-updown-history.ts",
-    "streaks": "tsx src/scripts/btc-updown-streaks.ts",
-    "realtime": "tsx src/scripts/btc-updown-realtime.ts"
+    "streaks": "tsx src/scripts/btc-updown-streaks.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
