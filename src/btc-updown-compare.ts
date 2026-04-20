@@ -19,6 +19,8 @@ import { fileURLToPath } from 'url';
 import { dirname, isAbsolute, join } from 'path';
 import {
   alignKey,
+  periodStartMsFromKalshiEventTicker,
+  periodStartMsFromPolyBtcUpDownSlug,
   periodStartMsFromResolutionMs,
   type Timeframe,
 } from './btc-updown-period.js';
@@ -38,6 +40,7 @@ interface LooseRow {
   settlementMs?: number;
   marketTicker?: string;
   eventTicker?: string;
+  priceDiff?: number;
 }
 
 interface FileShape {
@@ -63,24 +66,63 @@ function normalizeRow(
 ): { key: string; timeframe: Timeframe; periodStartMs: number } | null {
   if (!isTimeframe(row.timeframe)) return null;
   const tf = row.timeframe;
-  let periodStartMs = row.periodStartMs;
-  if (periodStartMs == null) {
-    let ms: number | undefined;
-    if (source === 'poly') {
-      if (row.closeMs != null) ms = row.closeMs;
-      else {
-        const raw = row.closedTime ?? row.endDate;
-        if (raw) ms = Date.parse(raw);
-      }
-    } else {
-      if (row.settlementMs != null) ms = row.settlementMs;
-      else if (row.settlementTs) ms = Date.parse(row.settlementTs);
+
+  let periodStartMs: number | undefined = row.periodStartMs;
+
+  if (periodStartMs == null && typeof row.alignKey === 'string') {
+    const parts = row.alignKey.split(':');
+    if (parts.length >= 2 && parts[0] === tf) {
+      const ms = Number(parts[1]);
+      if (Number.isFinite(ms)) periodStartMs = ms;
     }
-    if (ms == null || Number.isNaN(ms)) return null;
-    periodStartMs = periodStartMsFromResolutionMs(ms, tf);
   }
-  const key = row.alignKey ?? alignKey(tf, periodStartMs);
-  return { key, timeframe: tf, periodStartMs };
+
+  if (periodStartMs != null && Number.isFinite(periodStartMs)) {
+    const key = row.alignKey ?? alignKey(tf, periodStartMs);
+    return { key, timeframe: tf, periodStartMs };
+  }
+
+  if (source === 'poly' && row.slug) {
+    const fromSlug = periodStartMsFromPolyBtcUpDownSlug(row.slug, tf);
+    if (fromSlug != null) {
+      return {
+        key: alignKey(tf, fromSlug),
+        timeframe: tf,
+        periodStartMs: fromSlug,
+      };
+    }
+  }
+
+  if (source === 'kalshi' && row.eventTicker) {
+    const fromEv = periodStartMsFromKalshiEventTicker(row.eventTicker, tf);
+    if (fromEv != null) {
+      return {
+        key: alignKey(tf, fromEv),
+        timeframe: tf,
+        periodStartMs: fromEv,
+      };
+    }
+  }
+
+  let resolutionMs: number | undefined;
+  if (source === 'poly') {
+    if (row.closeMs != null) resolutionMs = row.closeMs;
+    else {
+      const raw = row.closedTime ?? row.endDate;
+      if (raw) resolutionMs = Date.parse(raw);
+    }
+  } else {
+    if (row.settlementMs != null) resolutionMs = row.settlementMs;
+    else if (row.settlementTs) resolutionMs = Date.parse(row.settlementTs);
+  }
+
+  if (resolutionMs == null || Number.isNaN(resolutionMs)) return null;
+  const ps = periodStartMsFromResolutionMs(resolutionMs, tf);
+  return {
+    key: row.alignKey ?? alignKey(tf, ps),
+    timeframe: tf,
+    periodStartMs: ps,
+  };
 }
 
 function loadJson(path: string): FileShape {

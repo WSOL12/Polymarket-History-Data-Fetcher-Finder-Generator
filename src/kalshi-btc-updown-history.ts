@@ -12,15 +12,15 @@
  *   KALSHI_BTC_UPDOWN_OUTPUT    - JSON path (default: kalshi-btc-updown.json)
  *   KALSHI_BTC_UPDOWN_INCLUDE_DETAILS - true to add per-market tickers and settlementTs in JSON
  *
+ * Each result may include `finalPrice` (Kalshi `expiration_value`) and `beatPrice` (`floor_strike` or `cap_strike`)
+ * when the API returns them for settled markets.
+ *
  * Run: npm run kalshi:btc-updown
  * Preflight only: npm run kalshi:ping
  */
 import 'dotenv/config';
 import { writeFileSync } from 'fs';
-import {
-  alignKey,
-  periodStartMsFromResolutionMs,
-} from './btc-updown-period.js';
+import { priceDiffUsd } from './btc-updown-period.js';
 
 const DEFAULT_BASE = 'https://api.elections.kalshi.com/trade-api/v2';
 
@@ -42,6 +42,11 @@ interface KalshiMarket {
   result: 'yes' | 'no' | 'scalar' | '';
   settlement_ts?: string | null;
   close_time?: string;
+  /** Observed value used at settlement (often the index level at period end). */
+  expiration_value?: string | null;
+  /** Strike / reference threshold from contract terms (see Kalshi `floor_strike` docs). */
+  floor_strike?: number | null;
+  cap_strike?: number | null;
 }
 
 interface BtcUpDownResult {
@@ -50,6 +55,8 @@ interface BtcUpDownResult {
   eventTicker: string;
   settlementTs: string;
   result: 'Yes' | 'No';
+  finalPrice?: number;
+  beatPrice?: number;
 }
 
 function getBaseUrl(): string {
@@ -154,6 +161,25 @@ function kalshiResultToUpDown(
   if (r === 'yes') return 'Yes';
   if (r === 'no') return 'No';
   return null;
+}
+
+/** Parse Kalshi `expiration_value` into a number when it is a plain numeric string. */
+function parseExpirationNumeric(raw?: string | null): number | undefined {
+  if (raw == null) return undefined;
+  const s = String(raw).trim();
+  if (!s) return undefined;
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function strikeAsBeatPrice(m: KalshiMarket): number | undefined {
+  if (typeof m.floor_strike === 'number' && Number.isFinite(m.floor_strike)) {
+    return m.floor_strike;
+  }
+  if (typeof m.cap_strike === 'number' && Number.isFinite(m.cap_strike)) {
+    return m.cap_strike;
+  }
+  return undefined;
 }
 
 /** Thrown when the API is unreachable or blocked (e.g. CloudFront 403 geo-restriction). */
@@ -262,8 +288,27 @@ async function fetchAllSettledForSeries(
 
 function mergeByTicker(live: KalshiMarket[], historical: KalshiMarket[]): KalshiMarket[] {
   const map = new Map<string, KalshiMarket>();
+  const pickExpiration = (
+    a?: string | null,
+    b?: string | null
+  ): string | null | undefined => {
+    const x = a?.trim();
+    if (x) return x;
+    const y = b?.trim();
+    return y || (a ?? b);
+  };
+  const combine = (a: KalshiMarket, b: KalshiMarket): KalshiMarket => ({
+    ...a,
+    ...b,
+    expiration_value: pickExpiration(a.expiration_value, b.expiration_value),
+    floor_strike: b.floor_strike ?? a.floor_strike,
+    cap_strike: b.cap_strike ?? a.cap_strike,
+  });
   for (const m of historical) map.set(m.ticker, m);
-  for (const m of live) map.set(m.ticker, m);
+  for (const m of live) {
+    const existing = map.get(m.ticker);
+    map.set(m.ticker, existing ? combine(existing, m) : m);
+  }
   return [...map.values()];
 }
 
@@ -290,12 +335,16 @@ function toResults(
     if (side == null) continue;
     const ts = m.settlement_ts?.trim() || m.close_time || '';
     if (!ts) continue;
+    const finalPrice = parseExpirationNumeric(m.expiration_value);
+    const beatPrice = strikeAsBeatPrice(m);
     rows.push({
       timeframe,
       marketTicker: m.ticker,
       eventTicker: m.event_ticker,
       settlementTs: ts,
       result: side,
+      ...(finalPrice != null ? { finalPrice } : {}),
+      ...(beatPrice != null ? { beatPrice } : {}),
     });
   }
   return rows;
@@ -414,20 +463,21 @@ async function main() {
     yesCount,
     noCount,
     results: all.map((r) => {
-      const settlementMs = new Date(r.settlementTs).getTime();
-      const periodStartMs = periodStartMsFromResolutionMs(
-        settlementMs,
-        r.timeframe
-      );
+      const hasBoth =
+        r.finalPrice != null &&
+        r.beatPrice != null &&
+        Number.isFinite(r.finalPrice) &&
+        Number.isFinite(r.beatPrice);
       return {
         timeframe: r.timeframe,
         result: r.result,
-        settlementTs: r.settlementTs,
         marketTicker: r.marketTicker,
         eventTicker: r.eventTicker,
-        settlementMs,
-        periodStartMs,
-        alignKey: alignKey(r.timeframe, periodStartMs),
+        ...(r.finalPrice != null ? { finalPrice: r.finalPrice } : {}),
+        ...(r.beatPrice != null ? { beatPrice: r.beatPrice } : {}),
+        ...(hasBoth
+          ? { priceDiff: priceDiffUsd(r.finalPrice!, r.beatPrice!) }
+          : {}),
       };
     }),
   };

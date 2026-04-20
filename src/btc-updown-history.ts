@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Fetch BTC Up/Down historical results (5m, 15m, 1h) from Polymarket.
- * Outputs only the resolution: Yes (Up) or No (Down).
+ * Outputs resolution (Yes = Up, No = Down) and, when present on the event,
+ * `finalPrice` / `beatPrice` from Gamma `eventMetadata` (end vs reference price).
  *
  * Config via .env:
  *   BTC_UPDOWN_DAYS_BACK  - only markets resolved in last N days (omit for no period filter)
@@ -14,8 +15,8 @@
 import 'dotenv/config';
 import { writeFileSync } from 'fs';
 import {
-  alignKey,
   periodStartMsFromResolutionMs,
+  priceDiffUsd,
 } from './btc-updown-period.js';
 
 const GAMMA_BASE = 'https://gamma-api.polymarket.com';
@@ -29,6 +30,10 @@ interface BtcUpDownResult {
   endDate: string;
   result: 'Yes' | 'No';
   closedTime?: string;
+  /** Chainlink (or venue) close / end observation for the window — from Gamma `eventMetadata.finalPrice`. */
+  finalPrice?: number;
+  /** Reference / open price for the window — from Gamma `eventMetadata.priceToBeat`. */
+  beatPrice?: number;
 }
 
 const SLUG_PATTERNS: Record<Timeframe, RegExp> = {
@@ -117,6 +122,10 @@ function extractResults(events: unknown[]): BtcUpDownResult[] {
       title?: string;
       endDate?: string;
       closedTime?: string;
+      eventMetadata?: {
+        finalPrice?: number;
+        priceToBeat?: number;
+      };
       markets?: Array<{
         slug?: string;
         outcomes?: string;
@@ -143,6 +152,16 @@ function extractResults(events: unknown[]): BtcUpDownResult[] {
     );
     if (!result) continue;
 
+    const meta = e.eventMetadata;
+    const finalPrice =
+      typeof meta?.finalPrice === 'number' && Number.isFinite(meta.finalPrice)
+        ? meta.finalPrice
+        : undefined;
+    const beatPrice =
+      typeof meta?.priceToBeat === 'number' && Number.isFinite(meta.priceToBeat)
+        ? meta.priceToBeat
+        : undefined;
+
     results.push({
       timeframe,
       slug,
@@ -150,6 +169,8 @@ function extractResults(events: unknown[]): BtcUpDownResult[] {
       endDate: market.endDate ?? e.endDate ?? '',
       result,
       closedTime: market.closedTime ?? e.closedTime,
+      ...(finalPrice != null ? { finalPrice } : {}),
+      ...(beatPrice != null ? { beatPrice } : {}),
     });
   }
 
@@ -345,22 +366,20 @@ async function main() {
       yesCount,
       noCount,
       results: results.map((r) => {
-        const closeMs = parseClosedTime(r.closedTime ?? r.endDate);
-        const periodStartMs =
-          closeMs != null
-            ? periodStartMsFromResolutionMs(closeMs, r.timeframe)
-            : undefined;
+        const hasBoth =
+          r.finalPrice != null &&
+          r.beatPrice != null &&
+          Number.isFinite(r.finalPrice) &&
+          Number.isFinite(r.beatPrice);
         return {
           timeframe: r.timeframe,
           result: r.result,
           slug: r.slug,
-          closedTime: r.closedTime,
-          endDate: r.endDate,
-          ...(closeMs != null ? { closeMs } : {}),
-          ...(periodStartMs != null
+          ...(r.finalPrice != null ? { finalPrice: r.finalPrice } : {}),
+          ...(r.beatPrice != null ? { beatPrice: r.beatPrice } : {}),
+          ...(hasBoth
             ? {
-                periodStartMs,
-                alignKey: alignKey(r.timeframe, periodStartMs),
+                priceDiff: priceDiffUsd(r.finalPrice!, r.beatPrice!),
               }
             : {}),
         };
