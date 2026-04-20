@@ -9,8 +9,10 @@ node_modules/
 # Build output
 dist/
 
-# Generated output (default from BTC_UPDOWN_OUTPUT)
+# Generated output (default from BTC_UPDOWN_OUTPUT and local comparisons)
 btc-updown.json
+poly-btc-updown.json
+kalshi-btc-updown.json
 
 # Logs
 *.log

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Show consecutive Yes/No streaks from btc-updown.json.
+ * Show consecutive Yes/No streaks from poly-btc-updown.json.
  *
  * Config via .env:
- *   BTC_UPDOWN_OUTPUT   - JSON file path (default: btc-updown.json)
+ *   BTC_UPDOWN_OUTPUT   - JSON file path (default: poly-btc-updown.json)
  *   BTC_UPDOWN_STREAK_MIN - only show streaks >= N (omit to show all)
  *
  * Run: npm run streaks
@@ -23,7 +23,8 @@ interface Streak {
 }
 
 function getConfig(): { inputPath: string; minStreak: number | null } {
-  const inputPath = process.env.BTC_UPDOWN_OUTPUT?.trim() || 'btc-updown.json';
+  const inputPath =
+    process.env.BTC_UPDOWN_OUTPUT?.trim() || 'poly-btc-updown.json';
   const minStr = process.env.BTC_UPDOWN_STREAK_MIN?.trim();
   const minStreak =
     minStr != null && minStr !== ''

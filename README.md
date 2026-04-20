@@ -33,7 +33,7 @@ Example `.env`:
 ```env
 BTC_UPDOWN_DAYS_BACK=2
 BTC_UPDOWN_TIMEFRAMES=5m
-BTC_UPDOWN_OUTPUT=btc-updown.json
+BTC_UPDOWN_OUTPUT=poly-btc-updown.json
 BTC_UPDOWN_VERBOSE=false
 BTC_UPDOWN_STREAK_MIN=6
 ```
@@ -52,7 +52,7 @@ Or `npm run start` / `npm run dev` (same script).
 npm run streaks
 ```
 
-Shows consecutive runs like `3: Yes`, `2: No`, `12: Yes`. Requires `btc-updown.json` (run `npm run btc-updown` first).
+Shows consecutive runs like `3: Yes`, `2: No`, `12: Yes`. Requires `poly-btc-updown.json` (run `npm run btc-updown` first).
 
 Set `BTC_UPDOWN_STREAK_MIN=6` in `.env` to only show runs of 6+.
 

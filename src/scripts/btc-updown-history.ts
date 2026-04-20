@@ -13,6 +13,10 @@
  */
 import 'dotenv/config';
 import { writeFileSync } from 'fs';
+import {
+  alignKey,
+  periodStartMsFromResolutionMs,
+} from './btc-updown-period.js';
 
 const GAMMA_BASE = 'https://gamma-api.polymarket.com';
 
@@ -327,7 +331,27 @@ async function main() {
       total: results.length,
       yesCount,
       noCount,
-      results: results.map((r) => ({ timeframe: r.timeframe, result: r.result })),
+      results: results.map((r) => {
+        const closeMs = parseClosedTime(r.closedTime ?? r.endDate);
+        const periodStartMs =
+          closeMs != null
+            ? periodStartMsFromResolutionMs(closeMs, r.timeframe)
+            : undefined;
+        return {
+          timeframe: r.timeframe,
+          result: r.result,
+          slug: r.slug,
+          closedTime: r.closedTime,
+          endDate: r.endDate,
+          ...(closeMs != null ? { closeMs } : {}),
+          ...(periodStartMs != null
+            ? {
+                periodStartMs,
+                alignKey: alignKey(r.timeframe, periodStartMs),
+              }
+            : {}),
+        };
+      }),
     };
     writeFileSync(outputPath, JSON.stringify(json, null, 2), 'utf-8');
     console.log(`Saved ${results.length} results to ${outputPath}`);
