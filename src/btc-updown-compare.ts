@@ -6,7 +6,7 @@
  * so both venues map to one candle per `alignKey` (e.g. 15m:1745098800000).
  *
  * Config via .env (paths default to fetcher outputs):
- *   BTC_UPDOWN_OUTPUT, KALSHI_BTC_UPDOWN_OUTPUT
+ *   Poly_BTC_UPDOWN_OUTPUT, KALSHI_BTC_UPDOWN_OUTPUT
  *
  * Run:
  *   npm run compare:btc              — read JSON files only
@@ -185,7 +185,7 @@ function printMismatchContext(joinedRows: JoinedRow[], windowSize: number): void
 
 /** Run fetch scripts via `npx tsx` from project root. */
 function runTsxScript(scriptFile: string, root: string): void {
-  const rel = join('src', 'scripts', scriptFile);
+  const rel = join('src', scriptFile);
   const r = spawnSync(`npx tsx "${rel}"`, {
     cwd: root,
     stdio: 'inherit',
@@ -204,7 +204,7 @@ function resolveProjectPath(root: string, p: string): string {
 
 function main(): void {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
-  const projectRoot = join(scriptDir, '..', '..');
+  const projectRoot = join(scriptDir, '..');
   const doFetch = process.argv.includes('--fetch');
 
   if (doFetch) {
@@ -216,7 +216,10 @@ function main(): void {
   }
 
   const polyPath =
-    process.env.BTC_UPDOWN_OUTPUT?.trim() || 'btc-updown.json';
+    process.env.Poly_BTC_UPDOWN_OUTPUT?.trim() ||
+    process.env.POLY_BTC_UPDOWN_OUTPUT?.trim() ||
+    process.env.BTC_UPDOWN_OUTPUT?.trim() ||
+    'poly-btc-updown.json';
   const kalshiPath =
     process.env.KALSHI_BTC_UPDOWN_OUTPUT?.trim() ||
     'kalshi-btc-updown.json';

@@ -6,6 +6,7 @@
   "main": "src/btc-updown-history.ts",
   "scripts": {
     "build": "tsc",
+    "poly:btc-updown": "tsx src/btc-updown-history.ts",
     "start": "tsx src/btc-updown-history.ts",
     "dev": "tsx src/btc-updown-history.ts",
     "streaks": "tsx src/btc-updown-streaks.ts",

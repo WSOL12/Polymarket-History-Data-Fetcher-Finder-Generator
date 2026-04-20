@@ -6,7 +6,7 @@
  * Config via .env:
  *   BTC_UPDOWN_DAYS_BACK  - only markets resolved in last N days (omit for no period filter)
  *   BTC_UPDOWN_TIMEFRAMES - comma-separated: 5m, 15m, 1h (default: all)
- *   BTC_UPDOWN_OUTPUT     - JSON file path to save results (omit to skip)
+ *   Poly_BTC_UPDOWN_OUTPUT - JSON file path to save results (omit to skip)
  *   BTC_UPDOWN_VERBOSE    - true to include title column
  *
  * Run: npm run btc-updown
@@ -261,6 +261,14 @@ function formatResult(r: BtcUpDownResult, verbose: boolean): string {
 
 const VALID_TIMEFRAMES: Timeframe[] = ['5m', '15m', '1h'];
 
+function pickFirstEnv(...candidates: (string | undefined)[]): string | undefined {
+  for (const c of candidates) {
+    const v = c?.trim();
+    if (v !== undefined && v !== '') return v;
+  }
+  return undefined;
+}
+
 function getConfig(): {
   timeframes: Timeframe[];
   daysBack: number | null;
@@ -286,7 +294,12 @@ function getConfig(): {
   const verbose =
     verboseEnv === 'true' || verboseEnv === '1' || verboseEnv === 'yes';
 
-  const outputPath = process.env.BTC_UPDOWN_OUTPUT?.trim() || null;
+  const outputPath =
+    pickFirstEnv(
+      process.env.Poly_BTC_UPDOWN_OUTPUT,
+      process.env.POLY_BTC_UPDOWN_OUTPUT,
+      process.env.BTC_UPDOWN_OUTPUT
+    ) ?? null;
 
   return {
     timeframes,

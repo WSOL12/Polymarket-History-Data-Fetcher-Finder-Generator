@@ -11,7 +11,7 @@
  *   not scored as a prediction). Otherwise stop.
  *
  * Config via .env:
- *   BTC_UPDOWN_OUTPUT - JSON file path (default: poly-btc-updown.json)
+ *   Poly_BTC_UPDOWN_OUTPUT - JSON file path (default: poly-btc-updown.json)
  *
  * Run: npm run sim:next
  */
@@ -26,7 +26,12 @@ interface ResultItem {
 }
 
 function getInputPath(): string {
-  return process.env.BTC_UPDOWN_OUTPUT?.trim() || 'poly-btc-updown.json';
+  return (
+    process.env.Poly_BTC_UPDOWN_OUTPUT?.trim() ||
+    process.env.POLY_BTC_UPDOWN_OUTPUT?.trim() ||
+    process.env.BTC_UPDOWN_OUTPUT?.trim() ||
+    'poly-btc-updown.json'
+  );
 }
 
 function simulate(results: ResultItem[]): { successes: number; failures: number } {
@@ -66,7 +71,9 @@ async function main() {
     const raw = readFileSync(inputPath, 'utf-8');
     data = JSON.parse(raw) as { results?: ResultItem[] };
   } catch {
-    console.error(`Cannot read ${inputPath}. Fetch or point BTC_UPDOWN_OUTPUT to a valid JSON file.`);
+    console.error(
+      `Cannot read ${inputPath}. Fetch or point Poly_BTC_UPDOWN_OUTPUT to a valid JSON file.`
+    );
     process.exit(1);
   }
 

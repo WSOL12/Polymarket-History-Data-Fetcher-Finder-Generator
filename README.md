@@ -24,7 +24,8 @@ Edit `.env` with your preferences. See `.env.example` for all options.
 |----------|-------------|---------|
 | `BTC_UPDOWN_DAYS_BACK` | Only markets closed in the last N days. Omit for no filter. | — |
 | `BTC_UPDOWN_TIMEFRAMES` | Comma-separated: `5m`, `15m`, `1h` | all |
-| `BTC_UPDOWN_OUTPUT` | JSON file path to save results. Omit to skip. | — |
+| `Poly_BTC_UPDOWN_OUTPUT` | Polymarket JSON file path. Omit to skip save. | — |
+| `KALSHI_BTC_UPDOWN_OUTPUT` | Kalshi JSON file path. | `kalshi-btc-updown.json` |
 | `BTC_UPDOWN_VERBOSE` | `true` to include title column in output | false |
 | `BTC_UPDOWN_STREAK_MIN` | Streaks: only show runs >= N (see `npm run streaks`) | show all |
 
@@ -33,7 +34,8 @@ Example `.env`:
 ```env
 BTC_UPDOWN_DAYS_BACK=2
 BTC_UPDOWN_TIMEFRAMES=5m
-BTC_UPDOWN_OUTPUT=poly-btc-updown.json
+Poly_BTC_UPDOWN_OUTPUT=poly-btc-updown.json
+KALSHI_BTC_UPDOWN_OUTPUT=kalshi-btc-updown.json
 BTC_UPDOWN_VERBOSE=false
 BTC_UPDOWN_STREAK_MIN=6
 ```
@@ -41,7 +43,7 @@ BTC_UPDOWN_STREAK_MIN=6
 ## Run
 
 ```bash
-npm run btc-updown
+npm run poly:btc-updown
 ```
 
 Or `npm run start` / `npm run dev` (same script).
@@ -52,13 +54,13 @@ Or `npm run start` / `npm run dev` (same script).
 npm run streaks
 ```
 
-Shows consecutive runs like `3: Yes`, `2: No`, `12: Yes`. Requires `poly-btc-updown.json` (run `npm run btc-updown` first).
+Shows consecutive runs like `3: Yes`, `2: No`, `12: Yes`. Requires `poly-btc-updown.json` (run `npm run poly:btc-updown` first).
 
 Set `BTC_UPDOWN_STREAK_MIN=6` in `.env` to only show runs of 6+.
 
 ## JSON output format
 
-When `BTC_UPDOWN_OUTPUT` is set, the file contains:
+When `Poly_BTC_UPDOWN_OUTPUT` is set, the file contains:
 
 ```json
 {
