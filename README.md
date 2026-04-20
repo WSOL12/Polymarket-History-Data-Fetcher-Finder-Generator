@@ -76,8 +76,8 @@ When `BTC_UPDOWN_OUTPUT` is set, the file contains:
 
 ## Project structure
 
-- `src/scripts/btc-updown-history.ts` — fetch history
-- `src/scripts/btc-updown-streaks.ts` — consecutive Yes/No streaks
+- `src/btc-updown-history.ts` — fetch history
+- `src/btc-updown-streaks.ts` — consecutive Yes/No streaks
 - `.env.example` — environment template (copy to `.env`)
 
 ---

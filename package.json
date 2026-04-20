@@ -3,18 +3,18 @@
   "version": "0.1.0",
   "description": "Polymarket BTC up/down history data fetcher",
   "type": "module",
-  "main": "src/scripts/btc-updown-history.ts",
+  "main": "src/btc-updown-history.ts",
   "scripts": {
     "build": "tsc",
-    "start": "tsx src/scripts/btc-updown-history.ts",
-    "dev": "tsx src/scripts/btc-updown-history.ts",
-    "streaks": "tsx src/scripts/btc-updown-streaks.ts",
-    "sim": "tsx src/scripts/btc-updown-sim.ts",
-    "sim:next": "tsx src/scripts/btc-updown-sim-next.ts",
-    "sim:longrun": "tsx src/scripts/btc-updown-sim-longrun.ts",
-    "kalshi:btc-updown": "tsx src/scripts/kalshi-btc-updown-history.ts",
-    "kalshi:ping": "tsx src/scripts/kalshi-btc-updown-history.ts --ping",
-    "compare:btc": "tsx src/scripts/btc-updown-compare.ts"
+    "start": "tsx src/btc-updown-history.ts",
+    "dev": "tsx src/btc-updown-history.ts",
+    "streaks": "tsx src/btc-updown-streaks.ts",
+    "sim": "tsx src/sim/btc-updown-sim.ts",
+    "sim:next": "tsx src/sim/btc-updown-sim-next.ts",
+    "sim:longrun": "tsx src/sim/btc-updown-sim-longrun.ts",
+    "kalshi:btc-updown": "tsx src/kalshi-btc-updown-history.ts",
+    "kalshi:ping": "tsx src/kalshi-btc-updown-history.ts --ping",
+    "compare:btc": "tsx src/btc-updown-compare.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
