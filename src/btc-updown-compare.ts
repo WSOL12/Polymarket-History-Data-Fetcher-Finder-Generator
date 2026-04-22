@@ -20,6 +20,7 @@ import { dirname, isAbsolute, join } from 'path';
 import {
   alignKey,
   periodStartMsFromKalshiEventTicker,
+  periodStartMsFromPolyBitcoinHourlySlug,
   periodStartMsFromPolyBtcUpDownSlug,
   periodStartMsFromResolutionMs,
   type Timeframe,
@@ -83,7 +84,10 @@ function normalizeRow(
   }
 
   if (source === 'poly' && row.slug) {
-    const fromSlug = periodStartMsFromPolyBtcUpDownSlug(row.slug, tf);
+    let fromSlug = periodStartMsFromPolyBtcUpDownSlug(row.slug, tf);
+    if (fromSlug == null && tf === '1h') {
+      fromSlug = periodStartMsFromPolyBitcoinHourlySlug(row.slug);
+    }
     if (fromSlug != null) {
       return {
         key: alignKey(tf, fromSlug),

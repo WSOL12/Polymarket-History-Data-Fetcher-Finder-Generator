@@ -15,7 +15,8 @@
     "sim:longrun": "tsx src/sim/btc-updown-sim-longrun.ts",
     "kalshi:btc-updown": "tsx src/kalshi-btc-updown-history.ts",
     "kalshi:ping": "tsx src/kalshi-btc-updown-history.ts --ping",
-    "compare:btc": "tsx src/btc-updown-compare.ts"
+    "compare:btc": "tsx src/btc-updown-compare.ts",
+    "nested": "tsx src/btc-updown-nested-strategy.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

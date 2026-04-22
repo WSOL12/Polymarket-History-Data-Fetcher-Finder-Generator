@@ -141,6 +141,67 @@ export function periodStartMsFromPolyBtcUpDownSlug(
   return sec * 1000 + TF_MS[tf];
 }
 
+const MONTH_WORD: Record<string, number> = {
+  january: 1,
+  jan: 1,
+  february: 2,
+  feb: 2,
+  march: 3,
+  mar: 3,
+  april: 4,
+  apr: 4,
+  may: 5,
+  june: 6,
+  jun: 6,
+  july: 7,
+  jul: 7,
+  august: 8,
+  aug: 8,
+  september: 9,
+  sep: 9,
+  sept: 9,
+  october: 10,
+  oct: 10,
+  november: 11,
+  nov: 11,
+  december: 12,
+  dec: 12,
+};
+
+function hour12To24(hour12: number, ap: 'am' | 'pm'): number {
+  if (ap === 'am') {
+    if (hour12 === 12) return 0;
+    return hour12;
+  }
+  if (hour12 === 12) return 12;
+  return hour12 + 12;
+}
+
+/**
+ * Polymarket hourly "Bitcoin Up or Down" slug, ET wall time, e.g.
+ * `bitcoin-up-or-down-april-20-2026-11am-et` → UTC ms of that hour start in America/New_York.
+ */
+export function periodStartMsFromPolyBitcoinHourlySlug(slug: string): number | null {
+  const m =
+    /^bitcoin-up-or-down-([a-z]+)-(\d{1,2})-(\d{4})-(\d{1,2})(am|pm)-et$/i.exec(
+      slug.trim()
+    );
+  if (!m) return null;
+  const mon = MONTH_WORD[m[1].toLowerCase()];
+  const day = parseInt(m[2], 10);
+  const year = parseInt(m[3], 10);
+  const hour12 = parseInt(m[4], 10);
+  const ap = m[5].toLowerCase() as 'am' | 'pm';
+  if (mon == null || !Number.isFinite(day) || !Number.isFinite(year)) return null;
+  if (!Number.isFinite(hour12) || hour12 < 1 || hour12 > 12) return null;
+  const hour24 = hour12To24(hour12, ap);
+  try {
+    return easternWallTimeToUtcMs(year, mon, day, hour24, 0);
+  } catch {
+    return null;
+  }
+}
+
 /** Signed (final − beat); Up outcomes are typically positive, Down negative. */
 export function priceDiffUsd(
   finalPrice: number,

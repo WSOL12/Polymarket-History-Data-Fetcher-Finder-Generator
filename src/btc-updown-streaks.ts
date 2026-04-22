@@ -22,6 +22,12 @@ interface Streak {
   values: ResultItem[];
 }
 
+interface StreakSummary {
+  total: number;
+  yes: number;
+  no: number;
+}
+
 function getConfig(): { inputPath: string; minStreak: number | null } {
   const inputPath =
     process.env.Poly_BTC_UPDOWN_OUTPUT?.trim() ||
@@ -61,6 +67,23 @@ function computeStreaks(results: ResultItem[]): Streak[] {
   return streaks;
 }
 
+function summarizeStreaks(streaks: Streak[]): Map<number, StreakSummary> {
+  const summary = new Map<number, StreakSummary>();
+
+  for (const streak of streaks) {
+    const current = summary.get(streak.count) ?? { total: 0, yes: 0, no: 0 };
+    current.total += 1;
+    if (streak.result === 'Yes') {
+      current.yes += 1;
+    } else {
+      current.no += 1;
+    }
+    summary.set(streak.count, current);
+  }
+
+  return new Map([...summary.entries()].sort((a, b) => a[0] - b[0]));
+}
+
 async function main() {
   const { inputPath, minStreak } = getConfig();
 
@@ -80,23 +103,35 @@ async function main() {
   }
 
   const streaks = computeStreaks(results);
+  const filteredStreaks =
+    minStreak != null ? streaks.filter((s) => s.count >= minStreak) : streaks;
+  const grouped = summarizeStreaks(filteredStreaks);
+  const allStreaksTotal = streaks.length;
+  const filteredStreaksTotal = filteredStreaks.length;
+  const totalPredictions = results.length;
+  const filteredPredictionsTotal = filteredStreaks.reduce(
+    (sum, s) => sum + s.count,
+    0
+  );
 
   if (minStreak != null) {
-    const filtered = streaks.filter((s) => s.count >= minStreak);
     console.log(`Streaks >= ${minStreak} (from ${inputPath}):\n`);
-    for (const s of filtered) {
-      console.log(`${s.count}: ${s.result}`);
+    for (const [count, info] of grouped) {
+      console.log(`${count}: ${info.total} (Yes: ${info.yes}, No: ${info.no})`);
     }
-    if (filtered.length === 0) {
+    if (filteredStreaksTotal === 0) {
       console.log(`No streaks of ${minStreak}+ found.`);
     }
-    console.log(`\nTotal: ${filtered.length} streaks (>= ${minStreak})`);
+    console.log(`\nTotal: ${filteredStreaksTotal} streaks (>= ${minStreak})`);
+    console.log(`Grand total: ${filteredPredictionsTotal} predictions`);
+    console.log(`All predictions total: ${totalPredictions}`);
   } else {
     console.log(`All streaks (from ${inputPath}):\n`);
-    for (const s of streaks) {
-      console.log(`${s.count}: ${s.result}`);
+    for (const [count, info] of grouped) {
+      console.log(`${count}: ${info.total} (Yes: ${info.yes}, No: ${info.no})`);
     }
-    console.log(`\nTotal: ${streaks.length} streaks`);
+    console.log(`\nTotal: ${allStreaksTotal} streaks`);
+    console.log(`Grand total: ${totalPredictions} predictions`);
   }
 }
 

@@ -54,7 +54,7 @@ Or `npm run start` / `npm run dev` (same script).
 npm run streaks
 ```
 
-Shows consecutive runs like `3: Yes`, `2: No`, `12: Yes`. Requires `poly-btc-updown.json` (run `npm run poly:btc-updown` first).
+Shows grouped streak lengths like `2: 40`, `3: 21` (plus Yes/No split). Requires `poly-btc-updown.json` (run `npm run poly:btc-updown` first).
 
 Set `BTC_UPDOWN_STREAK_MIN=6` in `.env` to only show runs of 6+.
 
